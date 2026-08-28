@@ -55,11 +55,19 @@ export async function supabaseRestFetch<T>(
   }
 
   if (!response.ok) {
+    // ----- 新增日志 -----
+    console.error('=== SUPABASE REST API ERROR ===');
+    console.error('Status:', response.status);
+    console.error('Status Text:', response.statusText);
+    console.error('Raw response body:', text);   // 注意：此时 text 已包含原始响应内容
+    // ---------------------
+
+    // 原有逻辑不变
     const message = typeof data === "object" && data && "message" in data
-      ? String((data as { message?: unknown }).message)
-      : text || response.statusText;
+        ? String((data as { message?: unknown }).message)
+        : text || response.statusText;
     return { ok: false, error: message, status: response.status };
-  }
+}
 
   return { ok: true, data: data as T, status: response.status };
 }
