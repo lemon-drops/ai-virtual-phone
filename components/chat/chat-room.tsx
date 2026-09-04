@@ -2267,7 +2267,8 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
         if (!canGroupAdminAct(session, actorKey, action, targetKey)) return null;
         applyGroupAdminAction(session, action, actorKey, targetKey, data.adminMuteMinutes);
         const actorDisplay = getGroupMemberDisplayName(actorKey, userN);
-        const targetDisplay = getGroupMemberDisplayName(targetKey, userN);
+        // 邀请对象是用户本人时，通知文案用第二人称「你」（群通知习惯表述）
+        const targetDisplay = targetKey === GROUP_SELF_KEY ? "你" : getGroupMemberDisplayName(targetKey, userN);
         return {
             content: buildGroupAdminNoticeText(action, actorDisplay, targetDisplay, data.adminMuteMinutes),
             mediaData: {

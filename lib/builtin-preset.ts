@@ -6,7 +6,7 @@ import type { PresetConfig } from "./settings-types";
 import { getCheckPhonePromptTags } from "./checkphone-config";
 
 export const BUILTIN_PRESET_ID = "builtin_default_v1";
-export const BUILTIN_PRESET_VERSION = 262; // 升版本会用出厂内容重写用户的内置预设副本（自定义会丢），非必要不升
+export const BUILTIN_PRESET_VERSION = 263; // 升版本会用出厂内容重写用户的内置预设副本（自定义会丢），非必要不升（263：围观群可邀请用户本人入群）
 
 export function createBuiltinPreset(): PresetConfig {
     const now = Date.now();
@@ -1073,7 +1073,7 @@ export function createBuiltinPreset(): PresetConfig {
                     "[角色名]: [A将群主转让给了B]（仅群主）",
                     "[角色名]: [A将B设为了管理员] 或 [A取消了B的管理员]（仅群主）",
                     "[角色名]: [A将B移出了群聊]（群主/管理员；管理员不能移出群主或其他管理员）",
-                    "[角色名]: [A邀请B加入了群聊]（群主/管理员；B 必须是真实存在的角色，不能凭空编造）",
+                    "[角色名]: [A邀请B加入了群聊]（群主/管理员；B 可以是真实存在的角色；若{{user}}不在本群（如围观群），也可以邀请{{user}}入群，格式 [A邀请{{user}}加入了群聊]（也可写「你」），拉入后{{user}}成为正式成员可正常发言）",
                     "[角色名]: [A禁言了B:30分钟]（群主/管理员；时长写 X分钟/X小时/X天）",
                     "[角色名]: [A解除了B的禁言]（群主/管理员）",
                     "【规则】",
@@ -1298,7 +1298,7 @@ export function createBuiltinPreset(): PresetConfig {
                     "",
                     "## 铁律",
                     "- 任何角色都绝对不能意识到、暗示或提及「有人在看」「观众」「屏幕外」之类的概念。",
-                    "- {{user}}不在群成员名单里：不得@{{user}}、不得把{{user}}拉进群、不得在群里向{{user}}发红包/转账/代付/礼物。",
+                    "- {{user}}默认不在群成员名单里：不得@{{user}}、不得向{{user}}发红包/转账/代付/礼物、不得发起群语音/视频通话（{{user}}不在群内）。若角色们出于自然剧情想正式把{{user}}拉进群（关系合适、有人提议、话题需要等），由群主或管理员输出 [A邀请{{user}}加入了群聊]（A 为该角色自己，B 处写{{user}}展开后的名字或直接写「你」），拉入后{{user}}成为正式群成员、可以正常发言，此围观群即转为普通群。",
                     "- 不得发起群语音通话或群视频通话（{{user}}无法参与，系统会丢弃这类输出）。",
                     "- 角色可以像平时背后聊起一个共同认识的人那样自然谈论{{user}}——吐槽、八卦、关心、议论都可以，但必须默认{{user}}看不到这些消息，语气毫无顾忌。",
                     "",

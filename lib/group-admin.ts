@@ -92,6 +92,8 @@ export function canGroupAdminAct(
     // user ownership/admin is harmless and follows the normal matrix.
     if (targetKey === GROUP_SELF_KEY && actorKey !== GROUP_SELF_KEY) {
         if (action === "kick") return false;
+        // 围观群（用户本人不在群内）：群主/管理员可以把用户拉进群，转成正式成员
+        if (action === "invite") return session.isSpectator === true;
         if (action === "mute" && session.allowAdminActionsOnUser !== true) return false;
     }
 
@@ -253,6 +255,12 @@ export function applyGroupAdminAction(
             break;
         }
         case "invite": {
+            // 邀请用户本人（围观群转正）：用户不是角色，不进 participantIds；
+            // 清除 isSpectator 后用户成为正式成员（可发言、可被 @）。
+            if (targetKey === GROUP_SELF_KEY) {
+                if (session.isSpectator) updates.isSpectator = false;
+                break;
+            }
             const ids = session.participantIds || [];
             if (!ids.includes(targetKey)) updates.participantIds = [...ids, targetKey];
             break;
