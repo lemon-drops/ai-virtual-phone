@@ -145,8 +145,14 @@ export function resolveGroupMemberKeyByName(
 ): string | null {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    // 用户本人（self）：匹配「你」或用户名字。大小写不敏感，兼容 Gracie/格蕾丝 这类写法差异。
-    if (trimmed === "你" || trimmed.toLowerCase() === (userName || "").trim().toLowerCase()) return GROUP_SELF_KEY;
+    // 用户本人（self）：匹配「你」、用户全名，或用户全名的首词（身份名 "Gracie Miller" 时写 "Gracie" 也认）。
+    // 大小写不敏感。译名/昵称（格蕾丝≠Gracie Miller）无法程序化匹配，由提示词引导模型写「你」或全名。
+    const userFull = (userName || "").trim();
+    const userFirst = userFull.split(/[\s_\-]+/)[0] || "";
+    const matchesSelf = trimmed === "你"
+        || (userFull && trimmed.toLowerCase() === userFull.toLowerCase())
+        || (userFirst && trimmed.toLowerCase() === userFirst.toLowerCase());
+    if (matchesSelf) return GROUP_SELF_KEY;
     const chars = loadCharacters();
     const inGroup = (session.participantIds || [])
         .map(id => chars.find(c => c.id === id))
