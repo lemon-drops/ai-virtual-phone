@@ -145,7 +145,8 @@ export function resolveGroupMemberKeyByName(
 ): string | null {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    if (trimmed === userName || trimmed === "你") return GROUP_SELF_KEY;
+    // 用户本人（self）：匹配「你」或用户名字。大小写不敏感，兼容 Gracie/格蕾丝 这类写法差异。
+    if (trimmed === "你" || trimmed.toLowerCase() === (userName || "").trim().toLowerCase()) return GROUP_SELF_KEY;
     const chars = loadCharacters();
     const inGroup = (session.participantIds || [])
         .map(id => chars.find(c => c.id === id))
