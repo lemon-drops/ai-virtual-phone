@@ -2325,10 +2325,7 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
                     const candidates = Array.from(new Set(["你", userNameForMatch, userFirstForMatch].filter(Boolean)));
                     const text = r.responseText || "";
                     const announceMatch = candidates.some(c => {
-                        const esc = c.replace(/[.*+?^${}()|[\]\\]/g, "\\            // 被踢出或禁言中的角色本轮不再发声
-            if (!(session.participantIds || []).includes(r.characterId)) continue;
-            if (isGroupMuted(session, r.characterId)) continue;
-            const responseBatchId = createResponseBatchId();");
+                        const esc = c.replace(/[.*+?^${}()|[\]\\]/g, (ch) => "\\" + ch);
                         const nameRx = new RegExp(`(?:^|[^\\p{L}\\p{N}])${esc}(?:$|[^\\p{L}\\p{N}])`, "u");
                         if (!nameRx.test(text) && !text.includes(c)) return false;
                         const joinDone = /(?:进群|入群|加入(?:了|这个)?群|拉(?:了|她|他|TA)?(?:进|入)(?:了)?群|邀请.{0,16}(?:加入|进|入)(?:了)?群|正式(?:进|入)(?:了)?群|welcome|joined|invited|officially in)/i.test(text);
@@ -2336,6 +2333,8 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
                         return joinDone && !future;
                     });
                     if (announceMatch) {
+                        // 真正执行转正：清围观标记，用户成为正式成员（可发言）
+                        applyGroupAdminAction(session, "invite", r.characterId, GROUP_SELF_KEY);
                         const actorDisplay = getGroupMemberDisplayName(r.characterId, userIdentity?.name || "用户");
                         const sysMsg = pushChatMessage({
                             sessionId: session.id,
