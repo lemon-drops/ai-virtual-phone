@@ -2313,6 +2313,43 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
             // 被踢出或禁言中的角色本轮不再发声
             if (!(session.participantIds || []).includes(r.characterId)) continue;
             if (isGroupMuted(session, r.characterId)) continue;
+            // 围观群兜底：群主/管理员在发言里「宣告」把用户拉进群时自动转正。
+            // 模型常只发「欢迎XX进群/我把TA拉进来了/XX is officially in the chat」等
+            // 自然语言而忘记输出 [邀请...加入群聊] 协议标记，系统据此识别并真正把
+            // 用户加入为正式成员（仅群主/管理员宣告有效，未来式/提议不算）。
+            if (session.isSpectator && canGroupAdminAct(session, r.characterId, "invite", GROUP_SELF_KEY)) {
+                const selfRole = getGroupRole(session, r.characterId);
+                if (selfRole === "owner" || selfRole === "admin") {
+                    const userNameForMatch = userIdentity?.name || "用户";
+                    const userFirstForMatch = userNameForMatch.split(/[\s_\-]+/)[0] || "";
+                    const candidates = Array.from(new Set(["你", userNameForMatch, userFirstForMatch].filter(Boolean)));
+                    const text = r.responseText || "";
+                    const announceMatch = candidates.some(c => {
+                        const esc = c.replace(/[.*+?^${}()|[\]\\]/g, "\\            // 被踢出或禁言中的角色本轮不再发声
+            if (!(session.participantIds || []).includes(r.characterId)) continue;
+            if (isGroupMuted(session, r.characterId)) continue;
+            const responseBatchId = createResponseBatchId();");
+                        const nameRx = new RegExp(`(?:^|[^\\p{L}\\p{N}])${esc}(?:$|[^\\p{L}\\p{N}])`, "u");
+                        if (!nameRx.test(text) && !text.includes(c)) return false;
+                        const joinDone = /(?:进群|入群|加入(?:了|这个)?群|拉(?:了|她|他|TA)?(?:进|入)(?:了)?群|邀请.{0,16}(?:加入|进|入)(?:了)?群|正式(?:进|入)(?:了)?群|welcome|joined|invited|officially in)/i.test(text);
+                        const future = /(?:想把|下次|改天|要不要|考虑|以后|将来|等她)/.test(text);
+                        return joinDone && !future;
+                    });
+                    if (announceMatch) {
+                        const actorDisplay = getGroupMemberDisplayName(r.characterId, userIdentity?.name || "用户");
+                        const sysMsg = pushChatMessage({
+                            sessionId: session.id,
+                            role: "assistant",
+                            content: buildGroupAdminNoticeText("invite", actorDisplay, "你"),
+                            mediaType: "group_admin_notice",
+                            mediaData: { adminAction: "invite", adminActorName: actorDisplay, adminTargetName: "你" },
+                            senderCharacterId: r.characterId,
+                            senderName: actorDisplay,
+                        });
+                        msgsSetter(prev => [...prev, sysMsg]);
+                    }
+                }
+            }
             const responseBatchId = createResponseBatchId();
             const { parts: rawParts, stateValues, freshStateValues, statusPanel, innerMonologue } = parseAIResponse(r.responseText, getCurrentStateForCharacter(r.characterId));
             const parts = stripInvalidStickerParts(rawParts, r.characterId);
